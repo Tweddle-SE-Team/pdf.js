@@ -187,10 +187,12 @@ let PDFViewerApplication = {
    * @private
    */
   async _parseHashParameters() {
+    /* /////////////// hack to enable debugging hash parameters //////////
     if (typeof PDFJSDev !== 'undefined' && PDFJSDev.test('PRODUCTION') &&
         !AppOptions.get('pdfBugEnabled')) {
       return;
     }
+    *///////////////// hack to enable debugging hash parameters //////////
     const waitOn = [];
 
     // Special debugging flags in the hash section of the URL.
