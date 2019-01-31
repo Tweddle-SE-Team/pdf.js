@@ -100,6 +100,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
     }
     var cs = ColorSpace.parse(dict.get('ColorSpace', 'CS'), xref, res,
                               pdfFunctionFactory);
+    // isDefaultDecode() of DeviceGray and DeviceRGB needs no `bpc` argument.
     return (cs.name === 'DeviceGray' || cs.name === 'DeviceRGB') &&
            cs.isDefaultDecode(dict.getArray('Decode', 'D'));
   };
@@ -114,8 +115,9 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
     }
     var cs = ColorSpace.parse(dict.get('ColorSpace', 'CS'), xref, res,
                               pdfFunctionFactory);
+    const bpc = dict.get('BitsPerComponent', 'BPC') || 1;
     return (cs.numComps === 1 || cs.numComps === 3) &&
-           cs.isDefaultDecode(dict.getArray('Decode', 'D'));
+           cs.isDefaultDecode(dict.getArray('Decode', 'D'), bpc);
   };
 
   function PartialEvaluator({ pdfManager, xref, handler, pageIndex, idFactory,
@@ -1330,7 +1332,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             fontFamily: font.fallbackName,
             ascent: font.ascent,
             descent: font.descent,
-            vertical: font.vertical,
+            vertical: !!font.vertical,
           };
         }
         textContentItem.fontName = font.loadedName;
@@ -1506,9 +1508,12 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
           return;
         }
 
-        // Do final text scaling
-        textContentItem.width *= textContentItem.textAdvanceScale;
-        textContentItem.height *= textContentItem.textAdvanceScale;
+        // Do final text scaling.
+        if (!textContentItem.vertical) {
+          textContentItem.width *= textContentItem.textAdvanceScale;
+        } else {
+          textContentItem.height *= textContentItem.textAdvanceScale;
+        }
         textContent.items.push(runBidiTransform(textContentItem));
 
         textContentItem.initialized = false;
